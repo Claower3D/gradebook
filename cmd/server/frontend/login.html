@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Вход — АттестатПро</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0f1117;--bg2:#161b27;--bg3:#1e2535;--bg4:#252d3d;
+  --border:#2d3a50;--border2:#3a4a65;
+  --text:#e8edf5;--text2:#8fa3c0;--text3:#566a85;
+  --blue:#4a90d9;--blue2:#2c6fad;
+  --green:#3db87a;--red:#e05050;--purple:#8b6fce;--amber:#e8a030;
+}
+html,body{height:100%;background:var(--bg);font-family:'Segoe UI',system-ui,sans-serif;color:var(--text)}
+body{display:flex;align-items:center;justify-content:center;min-height:100vh;
+  background:radial-gradient(ellipse at 20% 30%, #1a2540 0%, var(--bg) 60%)}
+.card{
+  width:420px;background:var(--bg2);border:1px solid var(--border);
+  border-radius:18px;padding:44px 40px;
+  box-shadow:0 24px 80px rgba(0,0,0,.5);
+}
+.logo{text-align:center;margin-bottom:36px}
+.logo-icon{
+  width:64px;height:64px;border-radius:16px;margin:0 auto 14px;
+  background:linear-gradient(135deg,#2c6fad,#8b6fce);
+  display:flex;align-items:center;justify-content:center;font-size:30px;
+}
+.logo h1{font-size:24px;font-weight:800;letter-spacing:-1px;color:var(--text)}
+.logo p{font-size:13px;color:var(--text2);margin-top:4px}
+
+.role-tabs{display:flex;gap:6px;background:var(--bg3);border-radius:8px;padding:4px;margin-bottom:28px}
+.role-tab{
+  flex:1;padding:9px 4px;border:none;background:none;color:var(--text2);
+  font-size:12px;font-weight:600;border-radius:5px;cursor:pointer;transition:.2s;letter-spacing:.3px;
+}
+.role-tab.active{background:var(--bg4);color:var(--text)}
+
+.form-group{margin-bottom:18px}
+.form-group label{display:block;font-size:12px;color:var(--text2);margin-bottom:7px;font-weight:600;letter-spacing:.3px;text-transform:uppercase}
+.form-group input{
+  width:100%;padding:12px 14px;background:var(--bg3);border:1px solid var(--border);
+  border-radius:8px;color:var(--text);font-size:15px;outline:none;transition:.2s;
+}
+.form-group input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(74,144,217,.12)}
+.form-group input::placeholder{color:var(--text3)}
+
+.btn{
+  width:100%;padding:13px;border:none;border-radius:9px;
+  background:linear-gradient(135deg,var(--blue),var(--blue2));
+  color:#fff;font-size:15px;font-weight:700;cursor:pointer;
+  transition:.2s;letter-spacing:.3px;margin-top:4px;
+}
+.btn:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(74,144,217,.4)}
+.btn:active{transform:translateY(0)}
+
+.divider{display:flex;align-items:center;gap:12px;margin:20px 0;color:var(--text3);font-size:13px}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
+
+.link-btn{
+  width:100%;padding:12px;border:1px solid var(--border2);border-radius:9px;
+  background:none;color:var(--text2);font-size:14px;cursor:pointer;transition:.2s;
+}
+.link-btn:hover{background:var(--bg3);color:var(--text);border-color:var(--blue)}
+
+.err{
+  background:rgba(224,80,80,.1);border:1px solid rgba(224,80,80,.3);border-radius:7px;
+  padding:10px 13px;font-size:13px;color:#f08080;margin-top:14px;display:none;
+}
+.err.show{display:block}
+
+.loading{opacity:.6;pointer-events:none}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">
+    <div class="logo-icon">🎓</div>
+    <h1>АттестатПро</h1>
+    <p>Система управления оценками</p>
+  </div>
+
+  <div class="role-tabs">
+    <button class="role-tab active" onclick="setRole('teacher')">Учитель</button>
+    <button class="role-tab" onclick="setRole('student')">Ученик</button>
+    <button class="role-tab" onclick="setRole('parent')">Родитель</button>
+  </div>
+
+  <div class="form-group">
+    <label>Логин</label>
+    <input type="text" id="login" placeholder="Введите логин" autocomplete="username" />
+  </div>
+  <div class="form-group">
+    <label>Пароль</label>
+    <input type="password" id="password" placeholder="••••••••" autocomplete="current-password"
+      onkeydown="if(event.key==='Enter')doLogin()" />
+  </div>
+  <div class="err" id="err"></div>
+  <button class="btn" id="login-btn" onclick="doLogin()">Войти</button>
+
+  <div id="reg-section">
+    <div class="divider">или</div>
+    <button class="link-btn" onclick="goRegister()">Зарегистрироваться</button>
+  </div>
+</div>
+
+<script>
+const API = '';
+let selectedRole = 'teacher';
+
+function setRole(r) {
+  selectedRole = r;
+  document.querySelectorAll('.role-tab').forEach((t, i) => {
+    t.classList.toggle('active', ['teacher','student','parent'][i] === r);
+  });
+  document.getElementById('reg-section').style.display = r === 'teacher' ? 'none' : '';
+}
+
+async function doLogin() {
+  const login = document.getElementById('login').value.trim();
+  const password = document.getElementById('password').value;
+  const err = document.getElementById('err');
+  err.classList.remove('show');
+  if (!login || !password) { showErr('Заполните все поля'); return; }
+
+  const btn = document.getElementById('login-btn');
+  btn.textContent = 'Вход...'; btn.classList.add('loading');
+
+  try {
+    const res = await fetch(API + '/api/auth/login', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({login, password})
+    });
+    const data = await res.json();
+    if (!data.success) { showErr(data.error || 'Ошибка входа'); return; }
+
+    const user = data.data.user;
+    if (user.role !== selectedRole) {
+      showErr('Неверная роль для этого аккаунта'); return;
+    }
+    localStorage.setItem('gb_token', data.data.token);
+    localStorage.setItem('gb_user', JSON.stringify(user));
+    window.location.href = '/app.html';
+  } catch(e) {
+    showErr('Ошибка подключения к серверу');
+  } finally {
+    btn.textContent = 'Войти'; btn.classList.remove('loading');
+  }
+}
+
+function goRegister() {
+  const role = selectedRole;
+  window.location.href = '/register.html?role=' + role;
+}
+
+function showErr(msg) {
+  const e = document.getElementById('err');
+  e.textContent = msg; e.classList.add('show');
+}
+
+// already logged in?
+if (localStorage.getItem('gb_token')) {
+  window.location.href = '/app.html';
+}
+</script>
+</body>
+</html>
